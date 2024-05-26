@@ -55,37 +55,70 @@ export class Node {
 	}
 }
 
-function search(node, targetRow, targetCol, queue = new Queue()) {
+function search(node, targetRow, targetCol) {
 	// Breath First Search algorithm
 
-	// Enqueue neighbors
-	let neighbors = node.edges;
-	if (neighbors) {
-		neighbors.forEach((neighbor) => {
-			queue.enqueue(neighbor.connectedNode);
+	let queue = new Queue();
+	let visited = new Set();
+
+	// Initialize queue with the starting node
+	queue.enqueue(node);
+	visited.add(node);
+
+	// Perform BFS
+	while (!queue.isEmpty()) {
+		let currentNode = queue.dequeue();
+
+		// Check if target is found
+		if (currentNode.row === targetRow && currentNode.column === targetCol) {
+			// Reconstruct and return the path
+			return constructPath(currentNode);
+		}
+
+		// Enqueue neighbors
+		currentNode.edges.forEach((neighbor) => {
+			if (!visited.has(neighbor.connectedNode)) {
+				queue.enqueue(neighbor.connectedNode);
+				visited.add(neighbor.connectedNode);
+				neighbor.connectedNode.parent = currentNode;
+			}
 		});
 	}
 
-	// Visit current node
-	// Case base: Element found
-	if (node.row === targetRow && node.column === targetCol) {
-		console.log('FOUND!');
-		console.log(node);
-		return;
+	// If target is not reachable
+	return null;
+}
+
+function constructPath(targetNode) {
+	let path = [];
+	let currentNode = targetNode;
+
+	// Traverse back from target to start
+	while (currentNode !== undefined) {
+		path.push([currentNode.row, currentNode.column]);
+		currentNode = currentNode.parent;
 	}
 
-	// recursively
-	// -search next neighbor in queue
-	let nextNode = queue.dequeue();
-	return search(nextNode, targetRow, targetCol, queue);
+	// Reverse the path to get it in the correct order
+	return path.reverse();
+}
+
+function knightMoves(initialCoordinates = [0, 0], targetCoordinates = [7, 7]) {
+	let path = search(
+		board[initialCoordinates[0]][initialCoordinates[1]],
+		targetCoordinates[0],
+		targetCoordinates[1]
+	);
+	console.log(`Target reached in ${path.length - 1} moves!\nPath:`);
+	path.forEach((position) => {
+		console.log(`[${position[0]}, ${position[1]}]`);
+	});
 }
 
 // Execution starts here:
 // Generate board & graph
 const board = generateBoard();
 linkNodes(board);
-printBoard(board);
 
 // Search
-search(board[0][0], 7, 6);
-
+knightMoves([3, 3], [4, 3]);
